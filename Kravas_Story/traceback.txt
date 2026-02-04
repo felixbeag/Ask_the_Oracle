@@ -1,0 +1,28 @@
+﻿I'm sorry, but an uncaught exception occurred.
+
+While running game code:
+  File "game/script.rpy", line 65, in script
+    $ import emscripten
+  File "game/script.rpy", line 65, in <module>
+    $ import emscripten
+ModuleNotFoundError: No module named 'emscripten'
+
+-- Full Traceback ------------------------------------------------------------
+
+Traceback (most recent call last):
+  File "game/script.rpy", line 65, in script
+    $ import emscripten
+  File "renpy/ast.py", line 1187, in execute
+    renpy.python.py_exec_bytecode(self.code.bytecode, self.hide, store=self.store)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "renpy/python.py", line 1273, in py_exec_bytecode
+    exec(bytecode, globals, locals)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "game/script.rpy", line 65, in <module>
+    $ import emscripten
+ModuleNotFoundError: No module named 'emscripten'
+
+Windows-10-10.0.19045-SP0 AMD64
+Ren'Py 8.5.2.26010301
+Kravas Story 1.0
+Wed Feb  4 13:56:34 2026

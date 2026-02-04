@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask the Oracle</title>
+    <style>
+        /* 1. SETUP */
+        body {
+            background-color: #000;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+            cursor: url('cursor.png'), auto;
+        }
+
+        /* 2. CONTAINER */
+        .container {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            width: 100vw;
+            max-height: 100vh;
+            max-width: 177.78vh;
+            background: #000;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* 3. VIDEOS */
+        video {
+            width: 100%; height: 100%;
+            display: block; object-fit: contain;
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+        }
+
+        #introVideo { z-index: 50; display: block; }
+        #intermediateVideo { z-index: 40; display: none; }
+        #menuLoop { z-index: 20; display: none; }
+        #mainVideo { z-index: 10; display: none; }
+
+
+        /* 4. INITIALIZE SCREEN */
+        #startOverlay {
+            position: absolute; z-index: 999;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: auto;
+        }
+
+        #startBtn {
+            padding: 20px 40px; font-size: 24px;
+            background: transparent; color: #fff;
+            border: 2px solid #fff; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        #startBtn:hover { background: #fff; color: #000; }
+
+
+        /* 5. INTERMEDIATE BUTTON (Invisible) */
+        #btnEnter {
+            position: absolute;
+            z-index: 45;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 20%; height: 15%;
+            display: none; 
+            background: transparent;
+            border: none;
+            color: transparent; 
+            cursor: url('cursor_hover.png'), pointer;
+            pointer-events: auto;
+        }
+
+
+        /* 6. MENU GRID */
+        .button-grid {
+            position: absolute; z-index: 30;
+            bottom: 3%; left: 10%; width: 80%; height: 18%;
+            display: none; 
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: 1fr 1fr;
+            gap: 10px; z-index: 999;
+        }
+        .hotspot { background: transparent; border: none; cursor: url('cursor_hover.png'), pointer; }
+
+        /* 7. RETURN BUTTON */
+        .home-btn {
+            position: absolute; top: 4%; right: 4%; z-index: 100;
+            background: rgba(0,0,0,0.8); color: white; border: 1px solid white;
+            padding: 10px 20px; cursor: url('cursor_hover.png'), pointer;
+            display: none; text-transform: uppercase; font-size: 1vw;
+        }
+        .home-btn:hover { background: white; color: black; }
+
+        /* KEEP YOUR OLD VIDEO STYLES HERE */
+
+    /* ADD THIS: This container holds the YouTube player behind everything */
+   .video-background {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10; /* Lower than buttons, but higher than the menu loop */
+    display: none; /* Keep it hidden until a button is pressed */
+}
+
+    #player { 
+        width: 100%; 
+        height: 100%; 
+    }
+
+    /* Update your grid to ensure it's on top of the YouTube layer */
+    .button-grid { 
+        z-index: 999; 
+    }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <video id="introVideo" playsinline><source src="videos/intro.mp4" type="video/mp4"></video>
+        
+        <video id="intermediateVideo" loop playsinline><source src="videos/intermediate.mp4" type="video/mp4"></video>
+        
+        <video id="menuLoop" playsinline><source src="videos/menu_loop.mp4" type="video/mp4"></video>
+        
+       <div class="video-background">
+    <div id="player"></div>
+</div> ```
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+        <div id="startOverlay">
+            <button id="startBtn" onclick="systemStart()">INITIALIZE SYSTEM</button>
+        </div>
+
+        <div id="btnEnter" onclick="goToMenu()"></div>
+
+      <div class="button-grid" id="menuButtons">
+            <button class="hotspot" onclick="playSection(0)"></button>
+            <button class="hotspot" onclick="playSection(60)"></button>
+            <button class="hotspot" onclick="playSection(120)"></button>
+            <button class="hotspot" onclick="playSection(180)"></button>
+            <button class="hotspot" onclick="playSection(240)"></button>
+            <button class="hotspot" onclick="playSection(300)"></button>
+            <button class="hotspot" onclick="playSection(360)"></button>
+            <button class="hotspot" onclick="playSection(420)"></button>
+            <button class="hotspot" onclick="playSection(480)"></button>
+            <button class="hotspot" onclick="window.location.href='Kravas_Story/index.html'"></button>
+        </div>
+
+        <button class="home-btn" id="homeBtn" onclick="returnToMenu()">Return to Menu</button>
+
+    </div>
+
+<script>
+
+    // --- SETTINGS ---
+const loopEndPoint = 5.0; 
+const loopStartPoint = 2.5; 
+
+// --- ELEMENTS ---
+const introVideo = document.getElementById("introVideo");
+const intermediateVideo = document.getElementById("intermediateVideo");
+const menuLoop = document.getElementById("menuLoop");
+const menuButtons = document.getElementById("menuButtons");
+const startOverlay = document.getElementById("startOverlay");
+const btnEnter = document.getElementById("btnEnter");
+const homeBtn = document.getElementById("homeBtn");
+const ytContainer = document.querySelector(".video-background");
+
+let player;
+let returnTimer;
+
+// 1. YOUTUBE SETUP
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+        videoId: 'V1hRF-Q3_ks',
+        playerVars: { 'autoplay': 0, 'controls': 0, 'rel': 0, 'mute': 0 }
+    });
+}
+
+// 2. SYSTEM START (Fullscreen + Intro)
+function systemStart() {
+    // Force Fullscreen
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) { elem.requestFullscreen(); }
+    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+
+    startOverlay.style.display = "none";
+    introVideo.style.display = "block";
+    introVideo.play();
+}
+
+// 3. TRANSITION: INTRO -> INTERMEDIATE
+introVideo.onended = function() {
+    introVideo.style.display = "none";
+    
+    // THIS FIXES THE VISIBILITY ISSUE:
+    intermediateVideo.style.display = "block"; 
+    intermediateVideo.play();
+    btnEnter.style.display = "block";
+};
+
+// 4. TRANSITION: INTERMEDIATE -> MENU
+function goToMenu() {
+    intermediateVideo.pause();
+    intermediateVideo.style.display = "none";
+    btnEnter.style.display = "none";
+    
+    menuLoop.style.display = "block";
+    menuLoop.play();
+    menuButtons.style.display = "grid";
+}
+
+// LOCAL MENU LOOP LOGIC
+menuLoop.addEventListener('timeupdate', function() {
+    if (this.currentTime >= loopEndPoint) {
+        this.currentTime = loopStartPoint;
+        this.play();
+    }
+});
+
+// 5. PLAY YOUTUBE SECTION
+function playSection(seconds) {
+    menuLoop.pause(); 
+    menuLoop.style.display = "none";
+    menuButtons.style.display = "none";
+    
+    ytContainer.style.display = "block";
+    homeBtn.style.display = "block";
+    
+    if (player) {
+        player.seekTo(seconds);
+        player.playVideo();
+        checkYoutubeEnd(seconds + 5); // Returns to menu after 5 seconds
+    }
+}
+
+function checkYoutubeEnd(endSecond) {
+    clearInterval(returnTimer);
+    returnTimer = setInterval(function() {
+        if (player && player.getCurrentTime() >= endSecond) {
+            clearInterval(returnTimer);
+            returnToMenu();
+        }
+    }, 100);
+}
+
+function returnToMenu() {
+    clearInterval(returnTimer);
+    if (player) { player.pauseVideo(); }
+    ytContainer.style.display = "none";
+    homeBtn.style.display = "none";
+    
+    menuLoop.style.display = "block";
+    menuLoop.play();
+    menuButtons.style.display = "grid";
+}
+
+</script>
+
+</body>
+</html>

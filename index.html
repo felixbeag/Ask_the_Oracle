@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask the Oracle</title>
+    <style>
+        /* 1. SETUP */
+        body {
+            background-color: #000;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+            cursor: url('cursor.png'), auto;
+        }
+
+        /* 2. CONTAINER */
+        .container {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            width: 100vw;
+            max-height: 100vh;
+            max-width: 177.78vh;
+            background: #000;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+
+
+        /* 3. VIDEOS */
+        video {
+            width: 100%; height: 100%;
+            display: block; object-fit: contain;
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+        }
+
+        #introVideo { z-index: 50; display: block; }
+        #intermediateVideo { z-index: 40; display: none; }
+        #menuLoop { z-index: 20; display: none; }
+        #mainVideo { z-index: 10; display: none; }
+
+
+        /* 4. INITIALIZE SCREEN */
+        #startOverlay {
+            position: absolute; z-index: 999;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: auto;
+        }
+
+        #startBtn {
+            padding: 20px 40px; font-size: 24px;
+            background: transparent; color: #fff;
+            border: 2px solid #fff; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        #startBtn:hover { background: #fff; color: #000; }
+
+
+        /* 5. INTERMEDIATE BUTTON (Invisible) */
+        #btnEnter {
+            position: absolute;
+            z-index: 45;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 20%; height: 15%;
+            display: none; 
+            background: transparent;
+            border: none;
+            color: transparent; 
+            cursor: url('cursor_hover.png'), pointer;
+            pointer-events: auto;
+        }
+
+
+        /* 6. MENU GRID */
+        .button-grid {
+            position: absolute; z-index: 30;
+            bottom: 3%; left: 10%; width: 80%; height: 18%;
+            display: none; 
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: 1fr 1fr;
+            gap: 10px; z-index: 999;
+        }
+        .hotspot { background: transparent; border: none; cursor: url('cursor_hover.png'), pointer; }
+
+        /* 7. RETURN BUTTON */
+        .home-btn {
+            position: absolute; top: 4%; right: 4%; z-index: 100;
+            background: rgba(0,0,0,0.8); color: white; border: 1px solid white;
+            padding: 10px 20px; cursor: url('cursor_hover.png'), pointer;
+            display: none; text-transform: uppercase; font-size: 1vw;
+        }
+        .home-btn:hover { background: white; color: black; }
+
+        /* KEEP YOUR OLD VIDEO STYLES HERE */
+
+    /* ADD THIS: This container holds the YouTube player behind everything */
+   .video-background {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10; /* Lower than buttons, but higher than the menu loop */
+    display: none; /* Keep it hidden until a button is pressed */
+    pointer-events: none; /* Add this! This stops it from blocking clicks */
+}
+
+    #player { 
+        width: 100%; 
+        height: 100%; 
+    }
+
+    /* Update your grid to ensure it's on top of the YouTube layer */
+    .button-grid { 
+        z-index: 999; 
+    }
+
+    /* Make buttons look disabled initially */
+#menuButtons {
+    opacity: 0.3;
+    pointer-events: none; 
+    transition: opacity 1s ease;
+}
+
+/* Blinking animation for the red light */
+#statusIndicator {
+    display: none; /* This is the most important line for the initialize page */
+    position: absolute; 
+    bottom: 22%; 
+    left: 10%; 
+    color: #ff0000; 
+    font-family: 'Courier New', monospace; 
+    font-size: 0.9vw; 
+    letter-spacing: 2px; 
+    z-index: 1000;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <video id="introVideo" playsinline><source src="videos/intro.mp4" type="video/mp4"></video>
+        
+        <video id="intermediateVideo" loop playsinline><source src="videos/intermediate.mp4" type="video/mp4"></video>
+        
+        <video id="menuLoop" playsinline><source src="videos/menu_loop.mp4" type="video/mp4"></video>
+        
+       <div class="video-background">
+    <div id="player"></div>
+</div> ```
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+        <div id="startOverlay">
+            <button id="startBtn" onclick="systemStart()">INITIALIZE SYSTEM</button>
+        </div>
+
+        <div id="statusIndicator" style="position: absolute; bottom: 22%; left: 10%; color: #ff0000; font-family: 'Courier New', monospace; font-size: 0.9vw; letter-spacing: 2px; z-index: 1000;">
+            ● SYSTEM LINK: <span id="statusText">ESTABLISHING...</span>
+        </div>
+
+        <div id="btnEnter" onclick="goToMenu()"></div>
+
+      <div class="button-grid" id="menuButtons">
+            <button class="hotspot" onclick="playSection(0,17)"></button>
+            <button class="hotspot" onclick="playSection(33,41)"></button>
+            <button class="hotspot" onclick="playSection(120,127)"></button>
+            <button class="hotspot" onclick="playSection(56,110)"></button>
+            <button class="hotspot" onclick="playSection(240,248)"></button>
+            <button class="hotspot" onclick="playSection(300,308)"></button>
+            <button class="hotspot" onclick="playSection(360,367)"></button>
+            <button class="hotspot" onclick="playSection(222,229)"></button>
+            <button class="hotspot" onclick="playSection(260,268)"></button>
+            <button class="hotspot" onclick="startStory()"></button>
+        </div>
+
+        <button class="home-btn" id="homeBtn" onclick="returnToMenu()">Return to Menu</button>
+
+    </div>
+
+    <div id="renpyContainer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: black;">
+    <button id="closeStoryBtn" onclick="closeStoryManual()" style="position: absolute; top: 20px; right: 20px; z-index: 110; padding: 10px; cursor: pointer; opacity: 0.5;">Exit Game</button>
+    <iframe id="renpyFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+</div>
+
+<script>
+
+
+    // --- SETTINGS ---
+// --- GLOBAL SYSTEM TRACKERS ---
+    let returnTimer;           // The "Stopwatch" for YouTube clips
+    let currentSectionEnd = 0; // Remembers where each button should stop
+    let firstMenuLoad = true;  // Tracks the Status Light visibility
+    let player;
+    const loopEndPoint = 5.0; 
+    const loopStartPoint = 2.5; 
+
+
+    // --- ELEMENTS ---
+    const introVideo = document.getElementById("introVideo");
+    const intermediateVideo = document.getElementById("intermediateVideo");
+    const menuLoop = document.getElementById("menuLoop");
+    const menuButtons = document.getElementById("menuButtons");
+    const startOverlay = document.getElementById("startOverlay");
+    const btnEnter = document.getElementById("btnEnter");
+    const homeBtn = document.getElementById("homeBtn");
+    const ytContainer = document.querySelector(".video-background");
+
+
+
+// --- 1. YOUTUBE SETUP (REPLACE YOUR OLD VERSION WITH THIS) ---
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+        videoId: 'V1hRF-Q3_ks',
+        playerVars: { 'autoplay': 0, 'controls': 0, 'rel': 0, 'mute': 0 },
+        events: {
+            'onReady': onPlayerReady // This triggers the status light change
+        }
+    });
+}
+
+// --- NEW FUNCTION: LIGHT UP THE SYSTEM ---
+function onPlayerReady(event) {
+    console.log("YouTube Connection Stable");
+    
+    const buttons = document.getElementById("menuButtons");
+    const indicator = document.getElementById("statusIndicator");
+    const statusText = document.getElementById("statusText");
+
+    // 1. Light up the buttons and make them clickable
+    if (buttons) {
+        buttons.style.opacity = "1";
+        buttons.style.pointerEvents = "auto";
+    }
+
+    // 2. Change the light to Green and stop it from blinking
+    if (indicator && statusText) {
+        indicator.style.color = "#00ff00"; 
+        indicator.style.animation = "none";
+        statusText.innerText = "STABLE";
+    }
+}
+
+// 2. SYSTEM START (Fullscreen + Intro)
+function systemStart() {
+    // Force Fullscreen
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) { elem.requestFullscreen(); }
+    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+
+    startOverlay.style.display = "none";
+    introVideo.style.display = "block";
+    introVideo.play();
+}
+
+// 3. TRANSITION: INTRO -> INTERMEDIATE
+introVideo.onended = function() {
+    introVideo.style.display = "none";
+    
+    // THIS FIXES THE VISIBILITY ISSUE:
+    intermediateVideo.style.display = "block"; 
+    intermediateVideo.play();
+    btnEnter.style.display = "block";
+};
+
+// 4. TRANSITION: INTERMEDIATE -> MENU
+function goToMenu() {
+    intermediateVideo.pause();
+    intermediateVideo.style.display = "none";
+    btnEnter.style.display = "none";
+    
+    // ONLY show the status light if this is the FIRST time loading the menu
+    const indicator = document.getElementById("statusIndicator");
+    if (firstMenuLoad && indicator) {
+        indicator.style.display = "block";
+        
+        // After 5 seconds of being visible on the menu, hide it forever
+        setTimeout(() => {
+            indicator.style.fadeOut = "1s"; // Optional: make it fade
+            setTimeout(() => { indicator.style.display = "none"; }, 1000);
+            firstMenuLoad = false; // Set to false so it never shows again
+        }, 5000);
+    }
+    
+    menuLoop.style.display = "block";
+    menuLoop.play();
+    menuButtons.style.display = "grid";
+}
+
+// LOCAL MENU LOOP LOGIC
+menuLoop.addEventListener('timeupdate', function() {
+    if (this.currentTime >= loopEndPoint) {
+        this.currentTime = loopStartPoint;
+        this.play();
+    }
+});
+
+// 5. PLAY YOUTUBE SECTION
+//let currentSectionEnd = 0; // New variable to track the specific stop point
+
+function playSection(startTime, endTime) {
+    currentSectionEnd = endTime; // Save the end time for this specific button
+    
+    menuLoop.pause(); 
+    menuLoop.style.display = "none";
+    menuButtons.style.display = "none";
+    
+    ytContainer.style.display = "block";
+    homeBtn.style.display = "block";
+    
+    if (player) {
+        player.seekTo(startTime);
+        player.playVideo();
+        runSectionTimer(); // Start the monitor
+    }
+}
+
+function runSectionTimer() {
+    clearInterval(returnTimer);
+    returnTimer = setInterval(function() {
+        if (player && player.getCurrentTime) {
+            let currentTime = player.getCurrentTime();
+            // This checks if we've hit the unique end time for this segment
+            if (currentTime >= currentSectionEnd) {
+                clearInterval(returnTimer);
+                returnToMenu();
+            }
+        }
+    }, 100);
+}
+
+
+function returnToMenu() {
+    clearInterval(returnTimer);
+    if (player) { player.pauseVideo(); }
+    ytContainer.style.display = "none";
+    homeBtn.style.display = "none";
+    
+    menuLoop.style.display = "block";
+    menuLoop.play();
+    menuButtons.style.display = "grid";
+}
+
+// This runs automatically as soon as the page loads
+window.onload = function() {
+    if (window.location.hash === "#menu") {
+        console.log("Returning from RenPy: Activating Menu...");
+
+        // 1. Hide the start screen and Intro completely
+        startOverlay.style.display = "none";
+        introVideo.style.display = "none";
+        intermediateVideo.style.display = "none";
+
+        // 2. Setup the Menu Loop
+        menuLoop.style.display = "block";
+        menuLoop.style.zIndex = "10"; // Bring to front
+        menuLoop.muted = false;       // Ensure sound is on
+        
+        // 3. Play the video
+        let playPromise = menuLoop.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(_ => {
+                // Video is visible and playing, now show buttons
+                menuButtons.style.display = "grid";
+                menuButtons.style.zIndex = "20"; // Buttons on top of video
+            }).catch(error => {
+                console.log("Autoplay prevented: User must click.");
+                // If the browser blocks autoplay, show the 'Enter' button as a backup
+                btnEnter.style.display = "block";
+            });
+        }
+
+        // 4. Force Fullscreen
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) { elem.requestFullscreen(); }
+    }
+};
+
+// A. Launch the Story
+function startStory() {
+    menuLoop.pause(); 
+    menuLoop.style.display = "none";
+    menuButtons.style.display = "none";
+
+    // Add this to clear the light immediately
+    document.getElementById("statusIndicator").style.display = "none";
+
+    const container = document.getElementById("renpyContainer");
+    const frame = document.getElementById("renpyFrame");
+
+    container.style.display = "block";
+    frame.src = "Kravas_Story/index.html"; // Ensure this path is correct!
+}
+
+// B. The Listener: Waiting for Ren'Py to say "I'm done"
+window.addEventListener('message', function(event) {
+    if (event.data === 'closeStory') {
+        returnToMenuFromStory();
+    }
+});
+
+// C. Cleanup and Return
+function returnToMenuFromStory() {
+    // 1. Hide the game and clear the frame
+    document.getElementById("renpyContainer").style.display = "none";
+    document.getElementById("renpyFrame").src = ""; 
+
+    // 2. Show and play the menu
+    menuLoop.style.display = "block";
+    menuLoop.play();
+    menuButtons.style.display = "grid";
+
+    // 3. THE FIX: Re-request Fullscreen
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+            console.log("Fullscreen auto-resume blocked. User must click once.");
+            // Optional: If it fails, add a one-time click listener to the body
+            document.body.addEventListener('click', () => {
+                elem.requestFullscreen();
+            }, { once: true });
+        });
+    }
+}
+
+// D. Manual Backup Close
+function closeStoryManual() {
+    if(confirm("Exit game and return to menu?")) {
+        returnToMenuFromStory();
+    }
+}
+
+</script>
+
+</body>
+</html>
