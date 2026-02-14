@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ask the Oracle</title>
     <style>
-        /* 1. SETUP */
+        /* 1. SETUP Def*/
         body {
             background-color: #000;
             margin: 0;
@@ -42,7 +42,7 @@
 
         #introVideo { z-index: 50; display: block; }
         #intermediateVideo { z-index: 40; display: none; }
-        #menuLoop { z-index: 20; display: none; }
+        #menuVideo { z-index: 20; display: none; }
         #mainVideo { z-index: 10; display: none; }
 
 
@@ -120,6 +120,16 @@
     /* Update your grid to ensure it's on top of the YouTube layer */
     .button-grid { 
         z-index: 999; 
+        /* 1. THE BOX: These values pull the grid into the dialogue area */
+        bottom: 4%;         /* Moves the whole set UP from the bottom edge */
+        left: 17%;          /* Moves the set RIGHT to center it */
+        width: 66%;         /* Shrinks the total width of the button group */
+        height: 12%;        /* Shrinks the total height to keep boxes from being too tall */
+        /* ... your other settings ... */
+        grid-template-columns: repeat(4, 1fr); /* 4 buttons wide */
+        grid-template-rows: repeat(2, 1fr);    /* 2 buttons deep */
+        /* 3. THE SPACING: Adjusts the gap between buttons */
+        gap: 8px 30px;      /* 8px vertical gap, 30px horizontal gap */
     }
 
     /* Make buttons look disabled initially */
@@ -141,6 +151,7 @@
     letter-spacing: 2px; 
     z-index: 1000;
     animation: pulse 1s infinite;
+    transition: opacity 1s ease;
 }
 
 @keyframes pulse {
@@ -148,6 +159,8 @@
     50% { opacity: 0.4; }
     100% { opacity: 1; }
 }
+
+
 
     </style>
 </head>
@@ -159,11 +172,11 @@
         
         <video id="intermediateVideo" loop playsinline><source src="videos/intermediate.mp4" type="video/mp4"></video>
         
-        <video id="menuLoop" playsinline><source src="videos/menu_loop.mp4" type="video/mp4"></video>
+        <video id="menuVideo" playsinline><source src="videos/menu_loop.mp4" type="video/mp4"></video>
         
        <div class="video-background">
     <div id="player"></div>
-</div> ```
+</div> 
 
 <script src="https://www.youtube.com/iframe_api"></script>
 
@@ -178,16 +191,16 @@
         <div id="btnEnter" onclick="goToMenu()"></div>
 
       <div class="button-grid" id="menuButtons">
-            <button class="hotspot" onclick="playSection(0,17)"></button>
-            <button class="hotspot" onclick="playSection(33,41)"></button>
-            <button class="hotspot" onclick="playSection(120,127)"></button>
-            <button class="hotspot" onclick="playSection(56,110)"></button>
-            <button class="hotspot" onclick="playSection(240,248)"></button>
-            <button class="hotspot" onclick="playSection(300,308)"></button>
-            <button class="hotspot" onclick="playSection(360,367)"></button>
-            <button class="hotspot" onclick="playSection(222,229)"></button>
-            <button class="hotspot" onclick="playSection(260,268)"></button>
-            <button class="hotspot" onclick="startStory()"></button>
+            <button class="hotspot" onclick="playSection(0,111)"></button>
+            <button class="hotspot" onclick="playSection(1,250,'szjNNJYojMs')"></button>
+            <button class="hotspot" onclick="playSection(120,126,'V1hRF-Q3_ks')"></button>
+            <button class="hotspot" onclick="startStory('Beagle_Story')"></button>
+            <button class="hotspot" onclick="playSection(114,344)"></button>
+            <button class="hotspot" onclick="playSection(345,385)"></button>
+            <button class="hotspot" onclick="startStory('Kravas_Story')"></button>
+            <button class="hotspot" onclick="playSection(386,477)"></button>
+ 
+            
         </div>
 
         <button class="home-btn" id="homeBtn" onclick="returnToMenu()">Return to Menu</button>
@@ -208,14 +221,19 @@
     let currentSectionEnd = 0; // Remembers where each button should stop
     let firstMenuLoad = true;  // Tracks the Status Light visibility
     let player;
-    const loopEndPoint = 5.0; 
-    const loopStartPoint = 2.5; 
+    const DEFAULT_VIDEO_ID = 'mwiDQxB_dk8'; // main YouTube video
+    const loopEndPoint = 8.5; 
+    const loopStartPoint = 4.0; 
+
+
 
 
     // --- ELEMENTS ---
     const introVideo = document.getElementById("introVideo");
     const intermediateVideo = document.getElementById("intermediateVideo");
-    const menuLoop = document.getElementById("menuLoop");
+    const menuVideo = document.getElementById("menuVideo"); // Renamed slightly to avoid confusion
+    //const loopStart = 2.5; 
+    //const loopEnd = 5.0;
     const menuButtons = document.getElementById("menuButtons");
     const startOverlay = document.getElementById("startOverlay");
     const btnEnter = document.getElementById("btnEnter");
@@ -227,7 +245,7 @@
 // --- 1. YOUTUBE SETUP (REPLACE YOUR OLD VERSION WITH THIS) ---
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        videoId: 'V1hRF-Q3_ks',
+        videoId: 'mwiDQxB_dk8',
         playerVars: { 'autoplay': 0, 'controls': 0, 'rel': 0, 'mute': 0 },
         events: {
             'onReady': onPlayerReady // This triggers the status light change
@@ -284,52 +302,80 @@ function goToMenu() {
     intermediateVideo.pause();
     intermediateVideo.style.display = "none";
     btnEnter.style.display = "none";
+
+    // 2. Prepare and Play the Menu
+    menuVideo.style.display = "block";
+    menuVideo.currentTime = 0; // Start from very beginning once, then it will loop 2.5-5.0
+    menuVideo.play();
+    menuButtons.style.display = "grid";
     
     // ONLY show the status light if this is the FIRST time loading the menu
     const indicator = document.getElementById("statusIndicator");
     if (firstMenuLoad && indicator) {
+        
         indicator.style.display = "block";
+        indicator.style.opacity = "1";
         
         // After 5 seconds of being visible on the menu, hide it forever
         setTimeout(() => {
-            indicator.style.fadeOut = "1s"; // Optional: make it fade
+            indicator.style.opacity = "0"; // Optional: make it fade
             setTimeout(() => { indicator.style.display = "none"; }, 1000);
             firstMenuLoad = false; // Set to false so it never shows again
         }, 5000);
     }
     
-    menuLoop.style.display = "block";
-    menuLoop.play();
-    menuButtons.style.display = "grid";
+
 }
 
 // LOCAL MENU LOOP LOGIC
-menuLoop.addEventListener('timeupdate', function() {
+menuVideo.addEventListener('timeupdate', function() {
     if (this.currentTime >= loopEndPoint) {
         this.currentTime = loopStartPoint;
-        this.play();
+        
     }
 });
 
 // 5. PLAY YOUTUBE SECTION
 //let currentSectionEnd = 0; // New variable to track the specific stop point
+function playSection(startTime, endTime, videoId = null) {
+    currentSectionEnd = endTime;
 
-function playSection(startTime, endTime) {
-    currentSectionEnd = endTime; // Save the end time for this specific button
-    
-    menuLoop.pause(); 
-    menuLoop.style.display = "none";
+    // Always decide which video we actually want
+    const targetId = videoId ? videoId : DEFAULT_VIDEO_ID;
+
+    // Hide menu stuff
+    menuVideo.pause();
+    menuVideo.style.display = "none";
     menuButtons.style.display = "none";
-    
+
+    // Show YouTube layer
     ytContainer.style.display = "block";
     homeBtn.style.display = "block";
-    
-    if (player) {
-        player.seekTo(startTime);
-        player.playVideo();
-        runSectionTimer(); // Start the monitor
+
+    if (!player) return;
+
+    // What video is currently loaded?
+    let currentId = null;
+    if (player.getVideoData && player.getVideoData().video_id) {
+        currentId = player.getVideoData().video_id;
     }
+
+    // If it's not the right one, load the right video
+    if (currentId !== targetId) {
+        player.loadVideoById({
+            videoId: targetId,
+            startSeconds: startTime
+        });
+    } else {
+        // Otherwise just jump within the current video
+        player.seekTo(startTime, true);
+        player.playVideo();
+    }
+
+    runSectionTimer();
 }
+
+
 
 function runSectionTimer() {
     clearInterval(returnTimer);
@@ -352,8 +398,9 @@ function returnToMenu() {
     ytContainer.style.display = "none";
     homeBtn.style.display = "none";
     
-    menuLoop.style.display = "block";
-    menuLoop.play();
+    menuVideo.style.display = "block";
+    menuVideo.currentTime = 0;
+    menuVideo.play();
     menuButtons.style.display = "grid";
 }
 
@@ -368,12 +415,14 @@ window.onload = function() {
         intermediateVideo.style.display = "none";
 
         // 2. Setup the Menu Loop
-        menuLoop.style.display = "block";
-        menuLoop.style.zIndex = "10"; // Bring to front
-        menuLoop.muted = false;       // Ensure sound is on
+        menuVideo.style.display = "block";
+        menuVideo.style.zIndex = "10"; // Bring to front
+        menuVideo.muted = false;       // Ensure sound is on
         
-        // 3. Play the video
-        let playPromise = menuLoop.play();
+       // 3. Force menu to start from the beginning every time
+        menuVideo.currentTime = 0;
+        // Then play the video
+        let playPromise = menuVideo.play();
         
         if (playPromise !== undefined) {
             playPromise.then(_ => {
@@ -394,9 +443,9 @@ window.onload = function() {
 };
 
 // A. Launch the Story
-function startStory() {
-    menuLoop.pause(); 
-    menuLoop.style.display = "none";
+function startStory(gameFolder) {
+    menuVideo.pause(); 
+    menuVideo.style.display = "none";
     menuButtons.style.display = "none";
 
     // Add this to clear the light immediately
@@ -406,7 +455,7 @@ function startStory() {
     const frame = document.getElementById("renpyFrame");
 
     container.style.display = "block";
-    frame.src = "Kravas_Story/index.html"; // Ensure this path is correct!
+    frame.src = gameFolder + "/index.html"; // Ensure this path is correct!
 }
 
 // B. The Listener: Waiting for Ren'Py to say "I'm done"
@@ -423,8 +472,9 @@ function returnToMenuFromStory() {
     document.getElementById("renpyFrame").src = ""; 
 
     // 2. Show and play the menu
-    menuLoop.style.display = "block";
-    menuLoop.play();
+    menuVideo.style.display = "block";
+    menuVideo.currentTime = 0;
+    menuVideo.play();
     menuButtons.style.display = "grid";
 
     // 3. THE FIX: Re-request Fullscreen
